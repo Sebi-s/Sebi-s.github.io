@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daten in README speichern</title>
+    <title>Daten in TXT speichern</title>
 </head>
 <body>
-    <h2>Speichere Daten in GitHub README.md</h2>
+    <h2>Speichere Daten in GitHub TXT-Datei</h2>
     <input type="text" id="inputField" placeholder="Gib etwas ein...">
     <button onclick="saveToGitHub()">Speichern</button>
 
     <script>
         const GITHUB_USERNAME = "Sebi-s";
         const REPO_NAME = "Sebi-s.github.io";
-        const FILE_PATH = "hhhh.txt";
-        const TOKEN = "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";
+        const FILE_PATH = "hhhhh.txt";  // Hier die TXT-Datei angeben
+        const TOKEN = "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";
 
         async function saveToGitHub() {
             let input = document.getElementById("inputField").value;
@@ -33,8 +33,8 @@
             let data = await response.json();
             let content = atob(data.content); // Base64-Decoder
 
-            // Neuen Text zur README hinzufügen
-            let newContent = content + `\n- ${input}`;
+            // Neuen Text zur TXT-Datei hinzufügen
+            let newContent = content + `\n${input}`;
             let encodedContent = btoa(newContent); // Base64-Encoder
 
             // Datei aktualisieren
