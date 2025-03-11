@@ -3,44 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daten in TXT speichern</title>
+    <title>Speichern in GitHub</title>
 </head>
 <body>
-    <h2>Speichere Daten in GitHub TXT-Datei2</h2>
+    <h2>Speichere Daten in GitHub TXT-Datei</h2>
     <input type="text" id="inputField" placeholder="Gib etwas ein...">
     <button onclick="saveToGitHub()">Speichern</button>
 
     <script>
         const GITHUB_USERNAME = "Sebi-s"; // Dein GitHub-Benutzername
         const REPO_NAME = "Sebi-s.github.io"; // Name deines Repos
-        const FILE_PATH = "hhhhh.txt"; // Die Datei, die du ändern willst
-        const TOKEN = "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"; // Dein Token (Achtung: Sicherheit!)
+        const FILE_PATH = "daten.txt"; // Name der Datei
+        const TOKEN = "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"; // Dein Token (nicht öffentlich teilen!)
 
         async function saveToGitHub() {
             let input = document.getElementById("inputField").value.trim();
             if (input === "") return alert("Bitte gib etwas ein!");
 
             try {
-                // 1️⃣ Bestehenden Datei-Inhalt abrufen
+                // 1️⃣ Vorhandenen Datei-Inhalt abrufen
                 let response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${FILE_PATH}`, {
                     headers: { "Authorization": `token ${TOKEN}` }
                 });
 
-                if (!response.ok) {
-                    console.error("Fehler beim Abrufen der Datei:", await response.text());
-                    alert("Fehler beim Laden der Datei! Siehe Konsole (F12).");
-                    return;
-                }
+                let sha = "";
+                let content = "";
 
-                let data = await response.json();
-                let sha = data.sha; // SHA ist für das Überschreiben erforderlich
-                let content = atob(data.content); // Base64-Decoder
+                if (response.ok) {
+                    let data = await response.json();
+                    sha = data.sha; // SHA für Update notwendig
+                    content = atob(data.content); // Dateiinhalt dekodieren
+                } else if (response.status === 404) {
+                    console.warn("Datei existiert nicht. Sie wird neu erstellt.");
+                } else {
+                    console.error("Fehler beim Abrufen der Datei:", await response.text());
+                    return alert("Fehler beim Laden der Datei! Siehe Konsole (F12).");
+                }
 
                 // 2️⃣ Neuen Text zur Datei hinzufügen
                 let newContent = content + `\n${input}`;
                 let encodedContent = btoa(unescape(encodeURIComponent(newContent))); // Base64-Kodierung fix
 
-                // 3️⃣ Datei aktualisieren (Commit)
+                // 3️⃣ Datei auf GitHub aktualisieren/hochladen
                 let updateResponse = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${FILE_PATH}`, {
                     method: "PUT",
                     headers: {
@@ -50,7 +54,7 @@
                     body: JSON.stringify({
                         message: "Neuer Eintrag hinzugefügt",
                         content: encodedContent,
-                        sha: sha
+                        sha: sha || undefined
                     })
                 });
 
