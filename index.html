@@ -6,59 +6,65 @@
     <title>Daten in TXT speichern</title>
 </head>
 <body>
-    <h2>Speichere Daten in GitHub TXT-Datei2</h2>
+    <h2>Speichere Daten in GitHub TXT-Datei</h2>
     <input type="text" id="inputField" placeholder="Gib etwas ein...">
     <button onclick="saveToGitHub()">Speichern</button>
 
     <script>
-        const GITHUB_USERNAME = "Sebi-s"; // Dein GitHub-Name
-        const REPO_NAME = "Sebi-s.github.io"; // Dein Repository-Name
-        const FILE_PATH = "hhhhh.txt"; // Die Datei, die du speichern willst
-        const TOKEN = "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"; // ⚠ Sicherheit beachten!
+        const GITHUB_USERNAME = "Sebi-s"; // Dein GitHub-Benutzername
+        const REPO_NAME = "Sebi-s.github.io"; // Name deines Repos
+        const FILE_PATH = "hhhhh.txt"; // Die Datei, die du ändern willst
+        const TOKEN = "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"; // Dein Token (Achtung: Sicherheit!)
 
         async function saveToGitHub() {
-            let input = document.getElementById("inputField").value;
-            if (input.trim() === "") return alert("Bitte gib etwas ein!");
+            let input = document.getElementById("inputField").value.trim();
+            if (input === "") return alert("Bitte gib etwas ein!");
 
-            // Bestehenden Datei-Inhalt abrufen
-            let response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${FILE_PATH}`, {
-                headers: { "Authorization": `token ${TOKEN}` }
-            });
+            try {
+                // 1️⃣ Bestehenden Datei-Inhalt abrufen
+                let response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${FILE_PATH}`, {
+                    headers: { "Authorization": `token ${TOKEN}` }
+                });
 
-            let sha = "";
-            let content = "";
+                if (!response.ok) {
+                    console.error("Fehler beim Abrufen der Datei:", await response.text());
+                    alert("Fehler beim Laden der Datei! Siehe Konsole (F12).");
+                    return;
+                }
 
-            if (response.ok) {
                 let data = await response.json();
-                sha = data.sha;
-                content = atob(data.content);
-            } else {
-                console.warn("Datei existiert möglicherweise nicht oder konnte nicht geladen werden.");
-            }
+                let sha = data.sha; // SHA ist für das Überschreiben erforderlich
+                let content = atob(data.content); // Base64-Decoder
 
-            // Neuen Text zur TXT-Datei hinzufügen
-            let newContent = content + `\n${input}`;
-            let encodedContent = btoa(unescape(encodeURIComponent(newContent))); // Richtige Base64-Kodierung
+                // 2️⃣ Neuen Text zur Datei hinzufügen
+                let newContent = content + `\n${input}`;
+                let encodedContent = btoa(unescape(encodeURIComponent(newContent))); // Base64-Kodierung fix
 
-            // Datei aktualisieren
-            let updateResponse = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${FILE_PATH}`, {
-                method: "PUT",
-                headers: {
-                    "Authorization": `token ${TOKEN}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    message: "Neuer Eintrag hinzugefügt",
-                    content: encodedContent,
-                    sha: sha
-                })
-            });
+                // 3️⃣ Datei aktualisieren (Commit)
+                let updateResponse = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${FILE_PATH}`, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `token ${TOKEN}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: "Neuer Eintrag hinzugefügt",
+                        content: encodedContent,
+                        sha: sha
+                    })
+                });
 
-            if (updateResponse.ok) {
-                alert("Erfolgreich gespeichert!");
-                document.getElementById("inputField").value = "";
-            } else {
-                alert("Fehler beim Speichern!");
+                if (updateResponse.ok) {
+                    alert("Erfolgreich gespeichert!");
+                    document.getElementById("inputField").value = "";
+                } else {
+                    let errorMessage = await updateResponse.text();
+                    console.error("Fehler beim Speichern:", errorMessage);
+                    alert("Fehler beim Speichern! Siehe Konsole (F12).");
+                }
+            } catch (error) {
+                console.error("Unerwarteter Fehler:", error);
+                alert("Ein unerwarteter Fehler ist aufgetreten. Siehe Konsole (F12).");
             }
         }
     </script>
