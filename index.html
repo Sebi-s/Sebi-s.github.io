@@ -1,9 +1,63 @@
-<html>
-  <head>
-    
-  </head>
-  <body>
-    <h1>Write in box</h1>
-    
-  </body>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daten in README speichern</title>
+</head>
+<body>
+    <h2>Speichere Daten in GitHub README.md</h2>
+    <input type="text" id="inputField" placeholder="Gib etwas ein...">
+    <button onclick="saveToGitHub()">Speichern</button>
+
+    <script>
+        const GITHUB_USERNAME = "Sebi-s";
+        const REPO_NAME = "Sebi-s.github.io";
+        const FILE_PATH = "README.md";
+        const TOKEN = "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";
+
+        async function saveToGitHub() {
+            let input = document.getElementById("inputField").value;
+            if (input.trim() === "") return alert("Bitte gib etwas ein!");
+
+            // GitHub API: Bestehenden Datei-Inhalt abrufen
+            let response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${FILE_PATH}`, {
+                headers: { "Authorization": `token ${TOKEN}` }
+            });
+
+            if (!response.ok) {
+                alert("Fehler beim Laden der Datei!");
+                return;
+            }
+
+            let data = await response.json();
+            let content = atob(data.content); // Base64-Decoder
+
+            // Neuen Text zur README hinzufügen
+            let newContent = content + `\n- ${input}`;
+            let encodedContent = btoa(newContent); // Base64-Encoder
+
+            // Datei aktualisieren
+            let updateResponse = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${FILE_PATH}`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `token ${TOKEN}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    message: "Neuer Eintrag hinzugefügt",
+                    content: encodedContent,
+                    sha: data.sha
+                })
+            });
+
+            if (updateResponse.ok) {
+                alert("Erfolgreich gespeichert!");
+                document.getElementById("inputField").value = "";
+            } else {
+                alert("Fehler beim Speichern!");
+            }
+        }
+    </script>
+</body>
 </html>
